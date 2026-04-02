@@ -1,5 +1,4 @@
-import ply.lex as lex
-import re
+import ply.lex as lex # type: ignore
 
 # Lista de classificadores de Tokens
 tokens = ['RESERVADO', 'ID', 'TIPO', 'INTEIRO', 'STRING', 'REAL', 'OP_ATRIBUICAO', 'OP_MENORIGUAL',
@@ -30,7 +29,7 @@ reservada = {
     'false': 'FALSE'
 }
 
-# print(list(reservada.values()))
+# Adicionando os classificadores de token reservados na lista de tokens
 tokens = tokens + list(reservada.values())
 
 # Regras para o PLY - Simbolos
@@ -115,7 +114,6 @@ def t_TIPO(t):
 
 lexer = lex.lex()
 
-# arquivo = open('teste-cod-cool.txt', "r")
 arquivo = open('newComplex.cl', "r")
 
 lexer.input(arquivo.read())
