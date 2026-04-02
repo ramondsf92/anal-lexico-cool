@@ -111,10 +111,14 @@ def t_TIPO(t):
 
 
 
-
+# Inicializando o Lexer
 lexer = lex.lex()
 
-arquivo = open('newComplex.cl', "r")
+
+# Alguns Cool para serem abertos somente para teste. Arquivos .cl devem estar no mesmo diretório do arquivo lexico-cool.py
+arquivo = open('helloWorld2.cl', "r")
+# arquivo = open('newComplex.cl', "r")
+# arquivo = open('primes.cl', "r")
 
 lexer.input(arquivo.read())
 
