@@ -1,4 +1,12 @@
 import ply.lex as lex # type: ignore
+import sys
+
+global pos_coluna
+
+def zerar_coluna():
+    global pos_coluna
+    pos_coluna = 1
+# pos_coluna = 1
 
 # Lista de classificadores de Tokens
 tokens = ['RESERVADO', 'ID', 'TIPO', 'INTEIRO', 'STRING', 'REAL', 'OP_ATRIBUICAO', 'OP_MENORIGUAL',
@@ -57,18 +65,29 @@ t_ignore = ' \t\r'
 
 ## Comentário
 def t_COMMENT_LINE(t):
-    r'--.*\n+'
+    r'--.*\n'
+    t.lexer.lineno += 1
+    #global pos_coluna
+    #pos_coluna = 1
+    zerar_coluna()
     pass
 
 ## Bloco de comentário - regex \(\*([^*]|)
 def t_COMMENT_BLOCK(t):
     r'\(\*([^*]|\*+[^*)])*\*+\)'
+    t.lexer.lineno += t.value.count("\n")
+    #global pos_coluna
+    #pos_coluna = 1
+    zerar_coluna()
     pass
 
 ## Deteccao de nova linha
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+    #global pos_coluna
+    #pos_coluna = 1
+    zerar_coluna()
 
 ## Erro
 def t_error(t):
@@ -110,22 +129,31 @@ def t_TIPO(t):
     return t
 
 
-
-# Inicializando o Lexer
+# Inicializando o Lexer.
 lexer = lex.lex()
 
+# Pegando o arquivo que deseja ser aberto pelo argv
+# print(sys.argv)
+if len(sys.argv) != 3 or sys.argv[1] != '-f':
+    print("Formato incorreto. Comando: python lexico-cool.py -f file")
+    quit()
 
 # Alguns Cool para serem abertos somente para teste. Arquivos .cl devem estar no mesmo diretório do arquivo lexico-cool.py
-arquivo = open('helloWorld2.cl', "r")
-# arquivo = open('newComplex.cl', "r")
-# arquivo = open('primes.cl', "r")
+try:
+    arquivo = open(sys.argv[2], "r")
+except FileNotFoundError:
+    print('Erro: arquivo não encontrado. Reveja o nome do arquivo e se o arquivo está no mesmo diretório do programa.')
+    quit()
+
 
 lexer.input(arquivo.read())
 
 for token in lexer:
-    print(token)
+    print(f'{token} - Linha {token.lineno} Coluna {pos_coluna}')
+    pos_coluna += len(str(token.value))
+    if str(token.value).find("\n") != -1:
+        #pos_coluna = 1
+        zerar_coluna()
 
 
-
-
-    
+arquivo.close()
