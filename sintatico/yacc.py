@@ -55,11 +55,11 @@ def p_feature(p):
             |   ID DOISPONTOS TIPO PONTOEVIRGULA
     '''
     if len(p) == 11:
-        p[0] = ('feature_com_argumentos', p[1], p[3], p[6], p[8])
+        p[0] = ('feature_metodo', p[1], p[3], p[6], p[8])
     elif len(p) == 7:
-        p[0] = ('feature_sem_argumentos', p[1], p[3], p[5])
+        p[0] = ('feature_atributo', p[1], p[3], p[5])
     else:
-        p[0] = ('feature_no_block', p[1], p[3])
+        p[0] = ('feature_atributo_no_block', p[1], p[3])
 
 
 
