@@ -1,0 +1,54 @@
+
+Line Number and Position Tracking
+
+Position tracking is often a tricky problem when writing compilers. By default, PLY tracks the line number and position of all tokens. This information is available using the following functions:
+
+p.lineno(num). Return the line number for symbol num
+
+p.lexpos(num). Return the lexing position for symbol num
+
+For example:
+
+def p_expression(p):
+    'expression : expression PLUS expression'
+    line   = p.lineno(2)        # line number of the PLUS token
+    index  = p.lexpos(2)        # Position of the PLUS token
+
+As an optional feature, yacc.py can automatically track line numbers and positions for all of the grammar symbols as well. However, this extra tracking requires extra processing and can significantly slow down parsing. Therefore, it must be enabled by passing the tracking=True option to yacc.parse(). For example:
+
+yacc.parse(data,tracking=True)
+
+Once enabled, the lineno() and lexpos() methods work for all grammar symbols. In addition, two additional methods can be used:
+
+p.linespan(num). Return a tuple (startline,endline) with the starting and ending line number for symbol num.
+
+p.lexspan(num). Return a tuple (start,end) with the starting and ending positions for symbol num.
+
+For example:
+
+def p_expression(p):
+    'expression : expression PLUS expression'
+    p.lineno(1)        # Line number of the left expression
+    p.lineno(2)        # line number of the PLUS operator
+    p.lineno(3)        # line number of the right expression
+    ...
+    start,end = p.linespan(3)    # Start,end lines of the right expression
+    starti,endi = p.lexspan(3)   # Start,end positions of right expression
+
+Note: The lexspan() function only returns the range of values up to the start of the last grammar symbol.
+
+Although it may be convenient for PLY to track position information on all grammar symbols, this is often unnecessary. For example, if you are merely using line number information in an error message, you can often just key off of a specific token in the grammar rule. For example:
+
+def p_bad_func(p):
+    'funccall : fname LPAREN error RPAREN'
+    # Line number reported from LPAREN token
+    print("Bad function call at line", p.lineno(2))
+
+Similarly, you may get better parsing performance if you only selectively propagate line number information where it’s needed using the p.set_lineno() method. For example:
+
+def p_fname(p):
+    'fname : ID'
+    p[0] = p[1]
+    p.set_lineno(0,p.lineno(1))
+
+PLY doesn’t retain line number information from rules that have already been parsed. If you are building an abstract syntax tree and need to have line numbers, you should make sure that the line numbers appear in the tree itself.
