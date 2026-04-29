@@ -2,6 +2,9 @@ from lexico.lex import tokens, lexer # type: ignore
 import ply.yacc as yacc # type: ignore
 import sys
 
+global erro_sintatico
+erro_sintatico = False
+
 def p_program(p):
     '''
     program :   class_list
@@ -40,7 +43,7 @@ def p_feature_list(p):
                     |   feature
                     |   epsilon
     '''
-    if len(p) == 3:
+    if len(p) == 3 and p[1] is not None:
         p[0] = p[1] + [p[2]]
     elif len(p) == 2 and p[1] is not None:
         p[0] = [p[1]]
@@ -62,6 +65,14 @@ def p_feature(p):
         p[0] = ('feature_atributo_no_block', p[1], p[3])
 
 
+def p_feature_error(p):
+    '''
+    feature :   ID ABRE_PARENTESE error FECHA_PARENTESE DOISPONTOS TIPO ABRE_CHAVES expr FECHA_CHAVES PONTOEVIRGULA
+            |   ID DOISPONTOS TIPO OP_ATRIBUICAO error PONTOEVIRGULA
+    '''
+    print(f'Erro em feature na linha {p.lineno(1)}.')
+
+
 
 def p_formal_list(p):
     '''
@@ -69,7 +80,7 @@ def p_formal_list(p):
                 |   formal
                 |   epsilon
     '''
-    if len(p) == 4:
+    if len(p) == 4 and p[1] is not None:
         p[0] = p[1] + [p[3]]
     elif len(p) == 2 and p[1] is not None:
         p[0] = [p[1]]
@@ -96,12 +107,19 @@ def p_expr_list(p):
                 |   expr
                 |   epsilon
     '''
-    if len(p) == 4:
+    if len(p) == 4 and p[1] is not None:
         p[0] = p[1] + [p[3]]
     elif len(p) == 2 and p[1] is not None:
         p[0] = [p[1]]
     else:
         p[0] = []
+
+
+def p_expr_list_error(p):
+    '''
+    expr_list   :   expr_list VIRGULA error
+    '''
+    print('Erro de expressão.')
 
 
 def p_expr_atribuicao(p):
@@ -129,6 +147,13 @@ def p_method(p):
     p[0] = ('metodo', p[1], p[3])
 
 
+def p_method_error(p):
+    '''
+    expr    :   ID ABRE_PARENTESE error FECHA_PARENTESE
+    '''
+    print(f'Erro em no método {p[1]} na linha {p.lineno(4)}')
+
+
 def p_expr_if(p):
     '''
     expr    :   IF expr THEN expr ELSE expr FI
@@ -154,10 +179,18 @@ def p_expr_block_list(p):
     expr_block_list :   expr_block_list expr PONTOEVIRGULA
                     |   expr PONTOEVIRGULA
     '''
-    if len(p) == 4:
+    if len(p) == 4 and p[1] is not None:
         p[0] = p[1] + [p[2]]
     else:
         p[0] = [p[1]]
+
+
+def p_expr_block_list_error(p):
+    '''
+    expr_block_list :   expr_block_list error PONTOEVIRGULA
+                    |   error PONTOEVIRGULA
+    '''
+    print(f'Erro no bloco da linha {p.lineno(2)}')
 
 
 def p_let_in(p):
@@ -177,12 +210,19 @@ def p_expr_id_list(p):
                     |   expr_id_list VIRGULA ID DOISPONTOS TIPO
                     |   epsilon
     '''
-    if len(p) == 8:
+    if len(p) == 8 and p[1] is not None:
         p[0] = p[1] + [('id_list', p[3], p[5], p[7])]
     elif len(p) == 6 and p[1] is not None:
         p[0] = [('id_list', p[1], p[3], p[5])]
     else:
         p[0] = []
+
+def p_expr_id_list_error(p):
+    '''
+    expr_id_list    :   error VIRGULA ID DOISPONTOS TIPO OP_ATRIBUICAO expr
+                    |   error VIRGULA ID DOISPONTOS TIPO
+    '''
+    print(f'Erro de expressão na linha {p.lineno(1)}')
 
 
 def p_expr_case_of(p):
@@ -201,6 +241,13 @@ def p_expr_case_list(p):
         p[0] = p[1] + [('case_item', p[2], p[4], p[6])]
     else:
         p[0] = [('case_item', p[1], p[3], p[5])]
+
+
+def p_expr_case_list_error(p):
+    '''
+    expr_case_list  :   expr_case_list ID DOISPONTOS TIPO SETA error PONTOEVIRGULA
+    '''
+    print(f'Erro no Case List na linha {p.lineno(7)}')
 
 
 def p_expr_new(p):
@@ -257,11 +304,15 @@ def p_expr_valores(p):
     p[0] = p[1]
 
 
+
+
 def p_epsilon(p):
     'epsilon :'
     pass
 
 def p_error(p):
+    global erro_sintatico
+    erro_sintatico = True
     if p:
         print(f'Erro sintático - Em "{p.value}" na linha {p.lineno}')
     else:
@@ -285,7 +336,7 @@ except FileNotFoundError:
 
 result = parser.parse(arquivo.read(), lexer=lexer)
 
-if result:
+if result and not erro_sintatico:
     print(result)
     print("Código sintaticamente correto!")
 
