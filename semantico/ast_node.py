@@ -23,6 +23,7 @@ class Classe(ASTNode):
     nome: str
     pai: Optional[str]
     features: list
+    linha: int
 
 
 # Features
@@ -32,12 +33,14 @@ class Metodo(ASTNode):
     nome: str
     formais: list
     retorno: str
+    linha: int
     corpo: Expr
 
 @dataclass
 class Atributo(ASTNode):
     nome: str
     tipo: str
+    linha: int
     expr: Optional[Expr] = None
 
 
@@ -45,6 +48,7 @@ class Atributo(ASTNode):
 class Formal(ASTNode):
     nome: str
     tipo: str
+    linha: int
 
 
 # Expressões
@@ -54,23 +58,27 @@ class Formal(ASTNode):
 class Atribuicao(ASTNode):
     nome: str
     expr: Expr
+    linha: int
 
 @dataclass
 class If(ASTNode):
     condicao: Expr
     then_expr: Expr
     else_expr: Expr
+    linha: int
 
 
 @dataclass
 class While(ASTNode):
     condicao: Expr
     corpo: Expr
+    linha: int
 
 
 @dataclass
 class Bloco(ASTNode):
     exprs: list
+    linha: int
 
 
 # Let
@@ -80,12 +88,14 @@ class Bloco(ASTNode):
 class Let(Expr):
     declaracoes: list
     corpo: Expr
+    linha: int
 
 
 @dataclass
 class LetDecl(ASTNode):
     nome: str
     tipo: str
+    linha: int
     expr: Optional[Expr] = None
 
 
@@ -96,6 +106,7 @@ class LetDecl(ASTNode):
 class Case(Expr):
     expr: Expr
     branches: list
+    linha: int
 
 
 @dataclass
@@ -103,6 +114,7 @@ class CaseBranch(ASTNode):
     nome: str
     tipo: str
     expr: Expr
+    linha: int
 
 
 # Dispatch
@@ -113,6 +125,7 @@ class Dispatch(Expr):
     expr: Expr
     metodo: str
     argumentos: list
+    linha: int
 
 
 @dataclass
@@ -121,12 +134,14 @@ class StaticDispatch(Expr):
     tipo: str
     metodo: str
     argumentos: list
+    linha: int
 
 
 @dataclass
 class SelfDispatch(Expr):
     metodo: str
     argumentos: list
+    linha: int
 
 
 # Operações
@@ -137,12 +152,14 @@ class BinOp(Expr):
     op: str
     esquerdo: Expr
     direito: Expr
+    linha: int
 
 
 @dataclass
 class UnaryOp(Expr):
     op: str
     expr: Expr
+    linha: int
 
 
 # Literais
@@ -151,26 +168,31 @@ class UnaryOp(Expr):
 @dataclass
 class Integer(Expr):
     valor: int
+    linha: int
 
 
 @dataclass
 class Real(Expr):
     valor: float
+    linha: int
 
 
 @dataclass
 class String(Expr):
     valor: str
+    linha: int
 
 
 @dataclass
 class Bool(Expr):
     valor: bool
+    linha: int
 
 
 @dataclass
 class Identifier(Expr):
     nome: str
+    linha: int
 
 
 ###########################################################
@@ -180,11 +202,13 @@ class Identifier(Expr):
 @dataclass
 class New(Expr):
     tipo: str
+    linha: int
 
 
 @dataclass
 class IsVoid(Expr):
     expr: Expr
+    linha: int
 
 # class Program:
 #     def __init__(self, classes):

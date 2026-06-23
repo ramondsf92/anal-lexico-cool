@@ -12,9 +12,24 @@ class SemanticAnalyzer:
     def __init__(self):
         self.scope = Scope()
         self.type_env = TypeEnvironment()
+        self.builtin_types = {
+            "Object",
+            "IO",
+            "Int",
+            "String",
+            "Bool",
+            "SELF_TYPE"
+        }
 
         self.current_class = None
         self.current_method = None
+
+    def type_exists(self, tipo):
+
+        return (
+        tipo in self.builtin_types
+        or tipo in self.type_env.classes
+        )
 
     def collect_classes(self, program):
 
@@ -68,7 +83,7 @@ class SemanticAnalyzer:
         tipo = self.scope.lookup(node.nome)
 
         if tipo is None:
-            raise Exception(f'Variável "{node.nome}" não declarada')
+            raise Exception(f'Erro na linha {node.linha}: Variável "{node.nome}" não declarada')
 
         return tipo
     
@@ -81,6 +96,12 @@ class SemanticAnalyzer:
 
         for declaracao in node.declaracoes:
 
+            if not self.type_exists(declaracao.tipo):
+                raise Exception(
+                    f'Erro semântico na linha {declaracao.linha}: '
+                    f'Tipo "{declaracao.tipo}" não existe'
+                )            
+
             if declaracao.expr:
 
                 tipo_expr = self.visit(declaracao.expr)
@@ -88,8 +109,10 @@ class SemanticAnalyzer:
                 if tipo_expr != declaracao.tipo:
 
                     raise Exception(
-                        f'Tipo incompatível: '
-                        f'{tipo_expr} != {declaracao.tipo}'
+                        f'Erro semântico na linha {declaracao.linha}: '
+                        f'Tipo incompatível. '
+                        f'Esperado {declaracao.tipo}, '
+                        f'recebido {tipo_expr}'
                     )
 
             self.scope.define(
@@ -111,7 +134,7 @@ class SemanticAnalyzer:
 
             if tipo_esq != "Int" or tipo_dir != "Int":
                 raise Exception(
-                    'Operações aritméticas precisam ter termos que sejam Int'
+                    f'Erro na linha {node.linha}: Operações aritméticas precisam ter termos que sejam Int'
                 )
 
             return "Int"
@@ -119,6 +142,7 @@ class SemanticAnalyzer:
     def visit_Program(self, node):
 
         self.collect_classes(node)
+        self.validate_classes()
 
         for classe in node.classes:
             self.visit(classe)
@@ -140,12 +164,25 @@ class SemanticAnalyzer:
 
 
     def visit_Metodo(self, node):
+
+        if not self.type_exists(node.retorno):
+
+            raise Exception(
+                f'Erro semântico na linha {node.linha}: '
+                f'Tipo de retorno "{node.retorno}" não existe'
+            )
+        
         escopo_anterior = self.scope
 
         self.scope = Scope(self.scope)
-        # self.visit(node.corpo)
-
+        
         for formal in node.formais:
+
+            if not self.type_exists(formal.tipo):
+                raise Exception(
+                    f'Erro semântico na linha {formal.linha}: '
+                    f'Tipo "{formal.tipo}" não existe'
+                )
 
             self.scope.define(
                 formal.nome,
@@ -157,26 +194,49 @@ class SemanticAnalyzer:
         if tipo_corpo != node.retorno:
 
             raise Exception(
+                f'Erro na linha {node.linha}: '
                 f'Método {node.nome} retorna '
                 f'{tipo_corpo} mas deveria retornar '
                 f'{node.retorno}'
             )
 
-        self.scope = escopo_anterior    
+        self.scope = escopo_anterior
+            
         
 
     def visit_Atributo(self, node):
 
+        if not self.type_exists(node.tipo):
+            raise Exception(
+                f'Erro semântico na linha {node.linha}: '
+                f'Tipo "{node.tipo}" não existe'
+            )
+        
         if node.expr:
             tipo_expr = self.visit(node.expr)
 
             if tipo_expr != node.tipo:
                 raise Exception(
-                    f'Tipo incompatível no atributo {node.nome}'
+                    f'Erro na linha {node.linha}: '
+                    f'Tipo incompatível no atributo {node.nome} '
+                    f'declarado como {node.tipo} mas recebeu {node.expr}'
+                )
+    
+    def validate_classes(self):
+
+        for nome_classe, info in self.type_env.classes.items():
+
+            pai = info["parent"]
+
+            if pai and not self.type_exists(pai):
+
+                raise Exception(
+                    f'Classe "{nome_classe}" herda de '
+                    f'"{pai}", que não existe'
                 )
 
 
-#Tabela de escopos
+# Escopo com tabela de símbolos
 class Scope:
     def __init__(self, parent=None):
         self.parent = parent

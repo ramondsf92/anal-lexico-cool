@@ -33,9 +33,9 @@ def p_class(p):
             |   CLASS TIPO ABRE_CHAVES feature_list FECHA_CHAVES PONTOEVIRGULA
     '''
     if len(p) == 9:
-        p[0] = Classe(nome=p[2], pai=p[4], features=p[6])
+        p[0] = Classe(nome=p[2], pai=p[4], features=p[6],linha=p.lineno(1))
     else:
-        p[0] = Classe(nome=p[2], pai=None, features=p[4])
+        p[0] = Classe(nome=p[2], pai=None, features=p[4],linha=p.lineno(1))
 
 
 
@@ -61,11 +61,11 @@ def p_feature(p):
     '''
     if len(p) == 11:
         #p[0] = ('feature_metodo', p[1], p[3], p[6], p[8])
-        p[0] = Metodo(nome=p[1],formais=p[3],retorno=p[6],corpo=p[8])
+        p[0] = Metodo(nome=p[1],formais=p[3],retorno=p[6],corpo=p[8], linha=p.lineno(1))
     elif len(p) == 7:
-        p[0] = Atributo(nome=p[1],tipo=p[3],expr=p[5])
+        p[0] = Atributo(nome=p[1],tipo=p[3],expr=p[5], linha=p.lineno(1))
     else:
-        p[0] = Atributo(nome=p[1],tipo=p[3],expr=None)
+        p[0] = Atributo(nome=p[1],tipo=p[3],expr=None, linha=p.lineno(1))
 
 
 def p_feature_error(p):
@@ -96,7 +96,7 @@ def p_formal(p):
     formal  :   ID DOISPONTOS TIPO
     '''
     #p[0] = (p[1], p[3])
-    p[0] = Formal(nome=p[1],tipo=p[3])
+    p[0] = Formal(nome=p[1],tipo=p[3], linha=p.lineno(1))
 
 
 ######################################################################
@@ -131,7 +131,7 @@ def p_expr_atribuicao(p):
     expr    :   ID OP_ATRIBUICAO expr
     '''
     #p[0] = ('atribuicao', p[1], p[3])
-    p[0] = Atribuicao(nome=p[1],expr=p[3])
+    p[0] = Atribuicao(nome=p[1],expr=p[3], linha=p.lineno(1))
 
 
 def p_expr_arroba_metodo(p):
@@ -141,10 +141,10 @@ def p_expr_arroba_metodo(p):
     '''
     if len(p) == 9:
         #p[0] = ('expr_arroba_metodo', p[1], p[3], p[5], p[7])
-        p[0] = StaticDispatch(expr=p[1],tipo=p[3],metodo=p[5],argumentos=p[7])
+        p[0] = StaticDispatch(expr=p[1],tipo=p[3],metodo=p[5],argumentos=p[7],linha=p.lineno(2))
     else:
         #p[0] = ('expr_no_arroba_metodo', p[1], p[3], p[5])
-        p[0] = Dispatch(expr=p[1],metodo=p[3],argumentos=p[5])
+        p[0] = Dispatch(expr=p[1],metodo=p[3],argumentos=p[5],linha=p.lineno(2))
 
 
 def p_method(p):
@@ -152,7 +152,7 @@ def p_method(p):
     expr    :   ID ABRE_PARENTESE expr_list FECHA_PARENTESE
     '''
     #p[0] = ('metodo', p[1], p[3])
-    p[0] = SelfDispatch(metodo=p[1],argumentos=p[3])
+    p[0] = SelfDispatch(metodo=p[1],argumentos=p[3],linha=p.lineno(1))
 
 
 def p_method_error(p):
@@ -167,7 +167,7 @@ def p_expr_if(p):
     expr    :   IF expr THEN expr ELSE expr FI
     '''
     #p[0] = ('if', p[2], p[4], p[6])
-    p[0] = If(condicao=p[2],then_expr=p[4],else_expr=p[6])
+    p[0] = If(condicao=p[2],then_expr=p[4],else_expr=p[6], linha=p.lineno(1))
 
 
 def p_expr_while(p):
@@ -175,14 +175,14 @@ def p_expr_while(p):
     expr    :   WHILE expr LOOP expr POOL
     '''
     #p[0] = ('while', p[2], p[4])
-    p[0] = While(condicao=p[2],corpo=p[4])
+    p[0] = While(condicao=p[2],corpo=p[4], linha=p.lineno(1))
 
 def p_expr_bloco(p):
     '''
     expr    :   ABRE_CHAVES expr_block_list FECHA_CHAVES
     '''
     #p[0] = ('bloco', p[2])
-    p[0] = Bloco(exprs=p[2])
+    p[0] = Bloco(exprs=p[2], linha=p.lineno(1))
 
 def p_expr_block_list(p):
     '''
@@ -210,10 +210,10 @@ def p_let_in(p):
     '''
     if len(p) == 10:
         #p[0] = ('let_in_declar', p[2], p[4], p[6], p[7], p[9])
-        p[0] = Let(declaracoes=[LetDecl(nome=p[2],tipo=p[4],expr=p[6])]+p[7],corpo=p[9])
+        p[0] = Let(declaracoes=[LetDecl(nome=p[2],tipo=p[4],expr=p[6], linha=p.lineno(2))]+p[7],corpo=p[9], linha=p.lineno(1))
     else:
         #p[0] = ('let_in_no_declar', p[2], p[4], p[5], p[7])
-        p[0] = Let(declaracoes=[LetDecl(nome=p[2],tipo=p[4],expr=None)]+p[5],corpo=p[7])
+        p[0] = Let(declaracoes=[LetDecl(nome=p[2],tipo=p[4],expr=None, linha=p.lineno(2))]+p[5],corpo=p[7], linha=p.lineno(1))
 
 
 def p_expr_id_list(p):
@@ -224,9 +224,9 @@ def p_expr_id_list(p):
     '''
     if len(p) == 8 and p[1] is not None:
         #p[0] = p[1] + [('id_list', p[3], p[5], p[7])]
-        p[0] = p[1] + [LetDecl(nome=p[3],tipo=p[5],expr=p[7])]
+        p[0] = p[1] + [LetDecl(nome=p[3],tipo=p[5],expr=p[7], linha=p.lineno(3))]
     elif len(p) == 6 and p[1] is not None:
-        p[0] = p[1] + [LetDecl(nome=p[3],tipo=p[5],expr=None)]
+        p[0] = p[1] + [LetDecl(nome=p[3],tipo=p[5],expr=None, linha=p.lineno(3))]
     else:
         p[0] = []
 
@@ -243,7 +243,7 @@ def p_expr_case_of(p):
     expr    :   CASE expr OF expr_case_list ESAC
     '''
     #p[0] = ('case', p[2], p[4])
-    p[0] = Case(expr=p[2],branches=p[4])
+    p[0] = Case(expr=p[2],branches=p[4], linha=p.lineno(1))
 
 
 def p_expr_case_list(p):
@@ -253,9 +253,9 @@ def p_expr_case_list(p):
     '''
     if len(p) == 8:
         #p[0] = p[1] + [('case_item', p[2], p[4], p[6])]
-        p[0] = p[1] + [CaseBranch(nome=p[2], tipo=p[4], expr=p[6])]
+        p[0] = p[1] + [CaseBranch(nome=p[2], tipo=p[4], expr=p[6], linha=p.lineno(4))]
     else:
-        p[0] = [CaseBranch(nome=p[1], tipo=p[3], expr=p[5])]
+        p[0] = [CaseBranch(nome=p[1], tipo=p[3], expr=p[5], linha=p.lineno(4))]
 
 
 def p_expr_case_list_error(p):
@@ -270,21 +270,21 @@ def p_expr_new(p):
     expr    :   NEW TIPO
     '''
     #p[0] = p[2]
-    p[0] = New(tipo=p[2])
+    p[0] = New(tipo=p[2],linha=p.lineno(1))
 
 def p_expr_isvoid(p):
     '''
     expr    :   ISVOID expr
     '''
     #p[0] = p[2]
-    p[0] = IsVoid(tipo=p[2])
+    p[0] = IsVoid(expr=p[2],linha=p.lineno(1))
 
 def p_expr_not(p):
     '''
     expr    :   NOT expr
     '''
     #p[0] = p[2]
-    p[0] = UnaryOp(op='not',expr=p[2])
+    p[0] = UnaryOp(op='not',expr=p[2], linha=p.lineno(1))
 
 def p_expr_operacoes(p):
     '''
@@ -299,10 +299,10 @@ def p_expr_operacoes(p):
     '''
     if len(p) == 4:
         #p[0] = ('op', p[2], p[1], p[3])
-        p[0] = BinOp(op=p[2],esquerdo=p[1],direito=p[3])
+        p[0] = BinOp(op=p[2],esquerdo=p[1],direito=p[3], linha=p.lineno(2))
     else:
         #p[0] = ('inverso', p[2])
-        p[0] = UnaryOp(op='~',expr=p[2])
+        p[0] = UnaryOp(op='~',expr=p[2], linha=p.lineno(2))
 
 
 def p_expr_parentese(p):
@@ -325,22 +325,22 @@ def p_expr_valores(p):
     token_type = p.slice[1  ].type
     
     if token_type == 'ID':
-        p[0] = Identifier(p[1])
+        p[0] = Identifier(nome=p[1], linha=p.lineno(1))
 
     elif token_type == 'INTEIRO':
-        p[0] = Integer(p[1])
+        p[0] = Integer(p[1], linha=p.lineno(1))
 
     elif token_type == 'REAL':
-        p[0] = Real(p[1])
+        p[0] = Real(p[1], linha=p.lineno(1))
 
     elif token_type == 'STRING':
-        p[0] = String(p[1])
+        p[0] = String(p[1], linha=p.lineno(1))
 
     elif token_type == 'TRUE':
-        p[0] = Bool(True)
+        p[0] = Bool(valor=True, linha=p.lineno(1))
 
     elif token_type == 'FALSE':
-        p[0] = Bool(False)
+        p[0] = Bool(valor=False,linha=p.lineno(1))
 
     #p[0] = p[1]
 
